@@ -105,7 +105,7 @@ func HelloServer(counter *prometheus.CounterVec, tp *tracesdk.TracerProvider) fu
 		logger.Info("requested URL",
 			// Structured context as strongly typed Field values.
 			zap.String("url", r.URL.Path[1:]),
-			zap.String("traceID", span.SpanContext().TraceID().String()),
+			zap.String("trace_id", trace.SpanFromContext(ctx).SpanContext().TraceID().String()),
 		)
 		backendThing(ctx, tr)
 		fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
