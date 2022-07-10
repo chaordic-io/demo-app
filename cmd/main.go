@@ -15,7 +15,7 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
@@ -39,7 +39,7 @@ func main() {
 		registry, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}),
 	)
 	ctx := context.Background()
-	tp, err := tracerProvider(ctx, "10.0.0.5:4318") //"http://10.0.0.5:4318")
+	tp, err := tracerProvider(ctx, "10.0.0.5:4317")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,12 +51,14 @@ func main() {
 }
 
 func tracerProvider(ctx context.Context, host string) (*tracesdk.TracerProvider, error) {
-	client := otlptracehttp.NewClient(
-		otlptracehttp.WithEndpoint(host),
-		otlptracehttp.WithInsecure(),
-		// otlptracehttp.WithURLPath(path),
+
+	exporter, err := otlptrace.New(ctx,
+		otlptracegrpc.NewClient(
+			otlptracegrpc.WithEndpoint(host),
+			otlptracegrpc.WithInsecure(),
+		),
 	)
-	exporter, err := otlptrace.New(ctx, client)
+
 	if err != nil {
 		return nil, fmt.Errorf("creating OTLP trace exporter: %w", err)
 	}
