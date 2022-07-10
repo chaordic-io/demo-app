@@ -77,7 +77,7 @@ func tracerProvider(ctx context.Context, host string) (*tracesdk.TracerProvider,
 	return provider, nil
 }
 
-func HelloServer(counter *prometheus.CounterVec, tp *tracesdk.TracerProvider) func(w http.ResponseWriter, r *http.Request) {
+func getLogger() *zap.Logger {
 	logger, _ := zap.NewProduction()
 	logger = logger.With(
 		zap.String("service", "demo-app"),
@@ -90,6 +90,10 @@ func HelloServer(counter *prometheus.CounterVec, tp *tracesdk.TracerProvider) fu
 		zap.String("dc", os.Getenv("NOMAD_DC")),
 		zap.String("host", os.Getenv("NOMAD_HOST_IP_prometheus")),
 	)
+}
+
+func HelloServer(counter *prometheus.CounterVec, tp *tracesdk.TracerProvider) func(w http.ResponseWriter, r *http.Request) {
+	logger := getLogger()
 	defer logger.Sync()
 
 	logger.Info("starting app",
