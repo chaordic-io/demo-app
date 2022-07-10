@@ -79,7 +79,7 @@ func tracerProvider(ctx context.Context, host string) (*tracesdk.TracerProvider,
 
 func getLogger() *zap.Logger {
 	logger, _ := zap.NewProduction()
-	logger = logger.With(
+	return logger.With(
 		zap.String("service", "demo-app"),
 		zap.String("version", internal.Version),
 		zap.String("namespace", os.Getenv("NOMAD_NAMESPACE")),
