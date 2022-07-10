@@ -1,6 +1,6 @@
 job "demo" {
 
-  datacenters = ["hetzner"]
+  datacenters = ["dc1"]
   type = "service"
 
   update {
