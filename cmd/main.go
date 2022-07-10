@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -39,14 +38,22 @@ func main() {
 		registry, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}),
 	)
 	ctx := context.Background()
-	tp, err := tracerProvider(ctx, "loki-grpc.service.consul:4317")
+
+	logger := getLogger()
+	defer logger.Sync()
+	logger.Info("Tempo endpoint: " + os.Getenv("TEMPO_ENDPOINT"))
+	for _, env := range os.Environ() {
+		logger.Info(env)
+	}
+
+	tp, err := tracerProvider(ctx, os.Getenv("TEMPO_ENDPOINT"))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("trace provider crashed: ", zap.Error(err))
+
 	}
 
 	defer tp.Shutdown(ctx)
-
-	go http.ListenAndServe(":8080", http.HandlerFunc(HelloServer(requestHits, tp)))
+	go http.ListenAndServe(":8080", http.HandlerFunc(HelloServer(requestHits, tp, logger)))
 	http.ListenAndServe(":8090", handler)
 }
 
@@ -92,15 +99,14 @@ func getLogger() *zap.Logger {
 	)
 }
 
-func HelloServer(counter *prometheus.CounterVec, tp *tracesdk.TracerProvider) func(w http.ResponseWriter, r *http.Request) {
-	logger := getLogger()
-	defer logger.Sync()
+func HelloServer(counter *prometheus.CounterVec, tp *tracesdk.TracerProvider, logger *zap.Logger) func(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("starting app",
 		// Structured context as strongly typed Field values.
 		zap.String("version", internal.Version),
 		zap.String("go", internal.GoVersion),
 		zap.String("platform", internal.Platform),
+		zap.String("tempo_endpoint", os.Getenv("TEMPO_ENDPOINT")),
 	)
 
 	return func(w http.ResponseWriter, r *http.Request) {
