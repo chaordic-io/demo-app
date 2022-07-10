@@ -39,7 +39,7 @@ func main() {
 		registry, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}),
 	)
 	ctx := context.Background()
-	tp, err := tracerProvider(ctx, "10.0.0.5:4317")
+	tp, err := tracerProvider(ctx, "loki-grpc.service.consul:4317")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -63,7 +63,6 @@ job "demo" {
         cpu    = 500 # 500 MHz
         memory = 256 # 256MB
       }
-
     }
   }
 }
